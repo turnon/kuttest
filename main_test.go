@@ -44,7 +44,7 @@ func TestPostLinks(t *testing.T) {
 func TestGetRedirect(t *testing.T) {
 	pool := generatePool()
 	lc := loopCount()
-	num := os.Getenv("SHORT")
+	short := os.Getenv("SHORT")
 
 	var wg sync.WaitGroup
 	wg.Add(lc)
@@ -53,11 +53,41 @@ func TestGetRedirect(t *testing.T) {
 
 	for i := 0; i < lc; i++ {
 		pool <- func() {
-			getRedirect(num)
+			getRedirect(short)
 			wg.Done()
 		}
 	}
 
 	wg.Wait()
 	t.Log(time.Now().Sub(start))
+}
+
+func TestGetRedirects(t *testing.T) {
+	pool := generatePool()
+	lc := loopCount()
+	links := getLinks(lc)
+
+	var wg sync.WaitGroup
+	wg.Add(lc)
+
+	start := time.Now()
+
+	for i := 0; i < lc; i++ {
+		pool <- func() {
+			getRedirect(links.Data[i].Address)
+			wg.Done()
+		}
+	}
+
+	wg.Wait()
+	t.Log(time.Now().Sub(start))
+}
+
+func TestGetLinks(t *testing.T) {
+	limitInt := 10
+	if limitStr := os.Getenv("LIMIT"); limitStr != "" {
+		limitInt, _ = strconv.Atoi(limitStr)
+	}
+
+	getLinks(limitInt)
 }

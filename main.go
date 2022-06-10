@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -29,6 +30,29 @@ func postLinks(params map[string]interface{}) {
 	req.Header.Add("Content-Type", "application/json")
 
 	http.DefaultClient.Do(req)
+}
+
+type getLinksResp struct {
+	Total int `json:"total"`
+	Data  []struct {
+		Address string `json:"address"`
+	} `json:"data"`
+}
+
+func getLinks(limit int) *getLinksResp {
+	url := "http://localhost:3000/api/v2/links?limit=" + strconv.Itoa(limit)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("X-API-KEY", apiKey)
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	var linksResp getLinksResp
+	json.Unmarshal(body, &linksResp)
+
+	return &linksResp
 }
 
 func getRedirect(short string) {
